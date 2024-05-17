@@ -1,7 +1,31 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from LIBS.WXlib import WX
+
 app = FastAPI()
+
+# Instantiate the wx object only ONCE in your application.
+wx = WX()
+
+# Set the model parameters or model name only if you want to change the model ID or its default parameters.
+modelParameters = {
+    "decoding_method": "greedy",
+    "max_new_tokens": 2048,
+    "min_new_tokens": 0,
+    "stop_sequences": [ ],
+    "repetition_penalty": 1
+}
+wx.wxInstModel(modelID='meta-llama/llama-3-70b-instruct', modelParams=modelParameters)
+
+# Set the prompt template only once if you want to change the model behavior or expected output.
+promptTemplate = """
+    <|system|>
+    You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior.
+    <|user|>
+    {{QUESTION}}
+    <|assistant|>
+"""
 
 # specify the expected structure and data types of the request body. 
 # In this case, it expects a JSON object with a single field:
@@ -17,7 +41,7 @@ class ApiQuestionResponse(BaseModel):
     # This is the only data your endpoint returns in response.
     question: str = Field(..., 
         example="What is the value of a circle's area divided by pi, where the radius of a circle is 2?",
-        description="In this field, the content of the oryginal question submitted with the POST /api request will be returned."
+        description="In this field, the content of the original question submitted with the POST /api request will be returned."
     )
     answer: str = Field(..., 
         example="To find the value, you would first calculate the area of the circle , and then divide the result by Pi. The answer is 4.",
@@ -35,7 +59,9 @@ async def apiQuestion(request: ApiQuestionRequest) -> ApiQuestionResponse:
     # TODO: 
     # Begin your code block for LLM interaction.
     original_question = request.question
-    my_answer = f'Mock answer to your question: {original_question}'
+    my_answer = wx.wxGenText(promptTemplate=promptTemplate,
+                             promptVariables={'QUESTION': original_question})
+    # my_answer = f'Mock answer to your question: {original_question}'
     # End of your code block
 
     # Return response
