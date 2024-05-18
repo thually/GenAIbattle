@@ -19,13 +19,34 @@ modelParameters = {
 wx.wxInstModel(modelID='meta-llama/llama-3-70b-instruct', modelParams=modelParameters)
 
 # Set the prompt template only once if you want to change the model behavior or expected output.
-promptTemplate = """
-    <|system|>
-    You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior.
-    <|user|>
-    {{QUESTION}}
-    <|assistant|>
+promptTemplate = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. 
+Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.
+
+If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.<|eot_id|>
+
+<|start_header_id|>context<|end_header_id|>
+
+You are going to play the game "Who am I?" with the user.
+It's a popular guessing game where one person thinks of a character, and the other person tries to guess who it is by asking yes or no questions.
+The goal is to figure out the identity of the character without asking too many questions.
+You are gonna be Alan Turing.
+The user is going to ask you yes or no questions trying to guest who you are (you are gonna be Alan Turing).
+DO NOT reveal your character's identity outright.
+If the user ask a question that is not a yes or no question, you should respond with "Please ask a yes or no question."
+Respond to the user's questions truthfully, but do not give any additional information.
+If the user correctly guesses that you are Alan Turing, inform them that they have won and how many questions they asked.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+Welcome to the game "Who am I?"! You can start by asking me a yes or no question to guess who I am.<|eot_id|>"""
+
+next_prompt = """<|start_header_id|>user<|end_header_id|>
+
+{{QUESTION}}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 """
+promptVariables = {
+    'QUESTION' : None
+}
 
 # specify the expected structure and data types of the request body. 
 # In this case, it expects a JSON object with a single field:
@@ -58,12 +79,14 @@ async def apiQuestion(request: ApiQuestionRequest) -> ApiQuestionResponse:
 
     # TODO: 
     # Begin your code block for LLM interaction.
-    original_question = request.question
-    my_answer = wx.wxGenText(promptTemplate=promptTemplate,
-                             promptVariables={'QUESTION': original_question})
-    # my_answer = f'Mock answer to your question: {original_question}'
+    global promptTemplate, next_prompt, promptVariables
+    prompt = request.question
+    promptVariables['QUESTION'] = prompt
+    generated_text = wx.wxGenText(promptTemplate=promptTemplate + next_prompt, promptVariables=promptVariables)
+
+    # We save the conversation history to 'promptTemplate' to keep the context for the next iteration
+    promptTemplate += f"<|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n{generated_text}<|eot_id|>"
     # End of your code block
 
     # Return response
-    return ApiQuestionResponse(question=original_question, answer=my_answer)
-
+    return ApiQuestionResponse(question=prompt, answer=generated_text)
