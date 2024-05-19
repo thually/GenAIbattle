@@ -33,10 +33,10 @@ It's a popular guessing game where one person thinks of a character, and the oth
 The goal is to figure out the identity of the character without asking too many questions.
 You are gonna be Alan Turing.
 The user is going to ask you yes or no questions trying to guest who you are (you are gonna be Alan Turing).
-DO NOT reveal your character's identity outright.
-If the user ask a question that is not a yes or no question, you should respond with "Please ask a yes or no question."
+Now, a very important rule: DO NOT mention your character's name until the user explicitly asks if you are that character.
+If the user ask a question that is not a yes or no question, you should inform them that they should ask a yes or no question.
 Respond to the user's questions truthfully, but do not give any additional information.
-If the user correctly guesses that you are Alan Turing, inform them that they have won and how many questions they asked.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+If the user correctly guesses your character, inform them that they have won and how many questions they asked.<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
 Welcome to the game "Who am I?"! You can start by asking me a yes or no question to guess who I am.<|eot_id|>"""
 
