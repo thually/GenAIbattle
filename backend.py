@@ -40,6 +40,8 @@ If the user correctly guesses that you are Alan Turing, inform them that they ha
 
 Welcome to the game "Who am I?"! You can start by asking me a yes or no question to guess who I am.<|eot_id|>"""
 
+promptTemplate_copy = promptTemplate # Save a copy of the prompt template to reset the conversation history
+
 next_prompt = """<|start_header_id|>user<|end_header_id|>
 
 {{QUESTION}}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
@@ -81,6 +83,12 @@ async def apiQuestion(request: ApiQuestionRequest) -> ApiQuestionResponse:
     # Begin your code block for LLM interaction.
     global promptTemplate, next_prompt, promptVariables
     prompt = request.question
+
+    if prompt == "reset":
+        promptTemplate = promptTemplate_copy
+        promptVariables['QUESTION'] = None
+        return ApiQuestionResponse(question="reset", answer="The conversation history has been reset.\n\nWelcome to the game 'Who am I?'! You can start by asking me a yes or no question to guess who I am.")
+
     promptVariables['QUESTION'] = prompt
     generated_text = wx.wxGenText(promptTemplate=promptTemplate + next_prompt, promptVariables=promptVariables)
 
